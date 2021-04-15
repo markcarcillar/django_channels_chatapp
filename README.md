@@ -3,4 +3,4 @@
 
 ## Features
 1. Authentication such as login, logout, and register account.
-2. User per user chat.
+2. User per user chat. All user can chat each other.

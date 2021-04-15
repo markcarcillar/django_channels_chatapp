@@ -31,6 +31,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'core.apps.CoreConfig',
+    'user.apps.UserConfig',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,7 +58,7 @@ ROOT_URLCONF = 'django_channels_chatapp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -118,3 +122,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Auth
+LOGIN_URL = 'user:login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = 'user:login'
+
+# Channels Conf
+ASGI_APPLICATION = 'django_channels_chatapp.asgi.application'
