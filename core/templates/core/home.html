@@ -5,7 +5,7 @@
     <ol>
         {% for object in users %}
             <li>
-                <a href="{% url 'core:chat' object.receivermodel.pk %}">{{ object.username }}</a>
+                <a href="{% url 'core:chat' object.pk %}">{{ object.username }}</a>
             </li>
         {% endfor %}
     </ol>

@@ -6,5 +6,5 @@ app_name = 'core'
 
 urlpatterns = [
     path('', views.HomeView.as_view(), name='home'),
-    path('chat/<int:receiver_pk>/', views.ChatView.as_view(), name='chat'),
+    path('chat/<int:user2_pk>/', views.ChatView.as_view(), name='chat'),
 ]

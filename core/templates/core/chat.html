@@ -13,8 +13,13 @@
 {% endblock extra_head %}
     
 {% block content %}
-    <h3>Chat with {{ user2_receiver.user.username }}</h3>
     
+    {% if user.username == user2.username %}
+        <h3>Chat with yourself</h3>
+    {% else %}
+        <h3>Chat with {{ user2.username }}</h3>
+    {% endif %}
+        
     <div id="chat-container">
         {% for chat in chats %}
             <p>
@@ -27,18 +32,52 @@
     <input id="chat-input" />
     <button id="send-chat">Send</button>
 
-    <script>
-        const chatInput = document.querySelector('#chat-input'),
-            submitButton = document.querySelector('#send-chat');
+    {{ user2.pk|json_script:'user2-pk' }}
 
-        chatInput.focus();
-        chatInput.onkeyup = function(e) {
+    <script>
+        // Setup user2 pk
+        const user2_pk = JSON.parse(document.querySelector('#user2-pk').textContent);
+        
+        // Setup a websocket
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/'
+            + user2_pk
+            + '/'
+        );
+
+        // Closed websocket
+        chatSocket.onclose = (e) => {
+            console.log('Websocket is closed now.');
+        };
+
+        // When theres a message on websocket
+        chatSocket.onmessage = (e) => {
+            console.log('Received:');
+            console.log(e);
+        }
+
+        document.querySelector('#send-chat').focus();
+        document.querySelector('#send-chat').onkeyup = function(e) {
             if (e.keyCode === 13) {  // enter, return
                 submitButton.click();
             }
         };
 
-        submitButton.onclick = (e) => {
+        document.querySelector('#send-chat').onclick = (e) => {
+            const chatInput = document.querySelector('#chat-input');
+            if (chatInput.value) {
+                // Send message to websocket
+                chatSocket.send(
+                    JSON.stringify(
+                        {
+                            message: chatInput.value
+                        }
+                    )
+                );
+            }
+            
             chatInput.value = '';
         }
     </script>

@@ -1,3 +1,6 @@
+from uuid import uuid4
+from secrets import token_hex
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
@@ -25,3 +28,15 @@ class ChatModel(models.Model):
 
     def __str__(self):
         return f'{self.sender.user.get_username()} chats {self.receiver.user.get_username()}'
+    
+class ChatKeyModel(models.Model):
+    '''Contains the chat key that will be used for group name on channel layer'''
+    key = models.UUIDField(default=uuid4)
+    usernames = models.JSONField(default=list)
+
+    def __str__(self):
+        text = 'Users: '
+        for count, username in enumerate(self.usernames):
+            text += username + ', '
+        # Return without ', ' at last
+        return text[:len(text) - 2]
