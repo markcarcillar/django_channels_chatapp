@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h3>Chat users</h3>
+    <ol>
+        {% for object in users %}
+            <li>
+                <a href="{% url 'core:chat' object.receivermodel.pk %}">{{ object.username }}</a>
+            </li>
+        {% endfor %}
+    </ol>
+{% endblock content %}

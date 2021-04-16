@@ -130,3 +130,13 @@ LOGOUT_REDIRECT_URL = 'user:login'
 
 # Channels Conf
 ASGI_APPLICATION = 'django_channels_chatapp.asgi.application'
+CHANNELS_LAYER = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [
+                ('localhost', 6379)
+            ]
+        }
+    }
+}

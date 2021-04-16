@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+
+{% block extra_head %}
+    <!-- Make the chat container scrollable -->
+    <style>
+        #chat-container
+        {
+            overflow: scroll;
+            height: 300px;
+        }
+    </style>
+{% endblock extra_head %}
+    
+{% block content %}
+    <h3>Chat with {{ user2_receiver.user.username }}</h3>
+    
+    <div id="chat-container">
+        {% for chat in chats %}
+            <p>
+                <b>{{ chat.sender.user.username }}</b>:
+                {{ chat.text }}
+            </p>
+            <p>{{ chat.log }}</p>
+        {% endfor %}
+    </div>
+    <input id="chat-input" />
+    <button id="send-chat">Send</button>
+
+    <script>
+        const chatInput = document.querySelector('#chat-input'),
+            submitButton = document.querySelector('#send-chat');
+
+        chatInput.focus();
+        chatInput.onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                submitButton.click();
+            }
+        };
+
+        submitButton.onclick = (e) => {
+            chatInput.value = '';
+        }
+    </script>
+{% endblock content %}
+    

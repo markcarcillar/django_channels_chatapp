@@ -5,13 +5,21 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Django Channels Chat App</title>
+
+    
+    {% block extra_head %}{% endblock extra_head %}
 </head>
 <body>
     <h1>Django Channels Chat App</h1>
+    
+    {% if user.is_authenticated %}
+        <h3>You are logged in as, {{ user.username }}</h3>
+    {% endif %}
+        
     <ul>
         {% if user.is_authenticated %}
             <li>
-                <a href="/">Home</a>
+                <a href="{% url 'core:home' %}">Home</a>
             </li>
             <li>
                 <a href="{% url 'user:logout' %}">Logout</a>
