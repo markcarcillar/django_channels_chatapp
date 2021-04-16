@@ -40,3 +40,10 @@ class ChatKeyModel(models.Model):
             text += username + ', '
         # Return without ', ' at last
         return text[:len(text) - 2]
+    
+    @classmethod
+    def get_by_usernames(cls, usernames):
+        chatkeys = cls.objects.all()
+        for chatkey in chatkeys:
+            if chatkey.usernames.sort() == usernames.sort():
+                return chatkey

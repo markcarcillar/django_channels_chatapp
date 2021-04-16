@@ -22,20 +22,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not user1.is_authenticated:
             await self.close()
         
-        # Setup sender and receiver models
+        # Setup user1 and user2 username, and 
+        # user1 sender and user2 receiver model
+        self.user1_username = await database_sync_to_async(user1.get_username)()
+        self.user2_username = await database_sync_to_async(user2.get_username)()
         self.user1_sender = await self.get_sendermodel(user=user1)
-        self.user2_sender = await self.get_sendermodel(user=user2)
-        self.user1_receiver = await self.get_receivermodel(user=user1)
-        self.user2_receiver = await self.get_receivermodel(user=user2)
-       
-        # Get the ChatKeyModel and create room name
-        chatkey = await self.get_chatkeymodel(
-                            user1_sender=self.user1_sender,
-                            user2_sender=self.user2_sender,
-                            user1_receiver=self.user1_receiver,
-                            user2_receiver=self.user2_receiver
-                        )
-        self.room_name = f'chat_room_{chatkey.key}'
+        self.user2_receiver = await self.get_sendermodel(user=user2)
+
+        # Get the key from ChatKeyModel and create room name
+        chatkey = await database_sync_to_async(ChatKeyModel.get_by_usernames)(
+            [
+                self.user1_username,
+                self.user2_username
+            ]
+        )
+        key = await self.get_key_from_chatkeymodel(chatkey)
+        self.room_name = f'chat_room_{key}'
         
         # Add the room name to channel layer
         await self.channel_layer.group_add(
@@ -69,7 +71,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(
             self.room_name,
             {
-                'type': 'send_message',
+                'type': 'send.message',
                 'message': message
             }
         )
@@ -96,8 +98,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return SenderModel.objects.get(**kwargs)
     
     @database_sync_to_async
-    def get_chatkeymodel(self, **kwargs):
-        return ChatKeyModel.objects.get(**kwargs)
+    def get_key_from_chatkeymodel(self, chatkey):
+        return chatkey.key
     
     @database_sync_to_async
     def create_chatmodel(self, **kwargs):
