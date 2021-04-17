@@ -2,12 +2,17 @@
 
 
 {% block extra_head %}
-    <!-- Make the chat container scrollable -->
     <style>
-        #chat-container
-        {
+        #chat-container {
+            /* Make the chat container scrollable */
             overflow: scroll;
-            height: 300px;
+            height: 280px;
+        }
+        .show {
+            display: block;
+        }
+        .hide {
+            display: none;
         }
     </style>
 {% endblock extra_head %}
@@ -22,12 +27,17 @@
         
     <div id="chat-container">
         {% for chat in chats %}
-            <p>
-                <b>{{ chat.sender.user.username }}</b>:
-                {{ chat.text }}
-            </p>
-            <p>{{ chat.log }}</p>
+            <div class="chat">
+                <p>
+                    <b>{{ chat.sender.user.username }}:</b>
+                    <span>{{ chat.text }}</span>
+                </p>
+                <p>{{ chat.log|date:'Y-m-d - h:i:s' }}</p>
+            </div>
         {% endfor %}
+    </div>
+    <div>
+        <small id="info" class="hide">Message input should not be empty.</small>
     </div>
     <input id="chat-input" />
     <button id="send-chat">Send</button>
@@ -36,9 +46,9 @@
 
     <script>
         // Setup user2 pk
-        const user2_pk = JSON.parse(document.querySelector('#user2-pk').textContent);
+        const user2_pk = JSON.parse(document.querySelector('#user2-pk').innerText);
         
-        // Setup a websocket
+        // Setup the websocket
         const chatSocket = new WebSocket(
             'ws://'
             + window.location.host
@@ -47,38 +57,68 @@
             + '/'
         );
 
-        // Closed websocket
-        chatSocket.onclose = (e) => {
-            console.log('Websocket is closed now.');
-        };
-
-        // When theres a message on websocket
+        // When there is a message on websocket
         chatSocket.onmessage = (e) => {
-            console.log('Received:');
-            console.log(e);
+            // Get and decode the message
+            const message = JSON.parse(e.data)['chatmodel'];
+            console.log(message);
+
+            // Get the chat container and create chat div element for
+            // the message
+            const chatContainerEl = document.querySelector('#chat-container'),
+                chatEl = document.createElement('div');
+            chatEl.className = 'chat';
+
+            // Setup elements for message
+            const messageEl = document.createElement('p'),
+                senderEl = document.createElement('b'),
+                textEl = document.createElement('span'),
+                logEl = document.createElement('p');
+            
+            // Put the message data to their corresponding element
+            senderEl.innerText = message.sender_username + ': ';
+            textEl.innerText = message.text;
+            logEl.innerText = message.log;
+            
+            // Append the senderEl and textEl to messageEl
+            messageEl.appendChild(senderEl);
+            messageEl.appendChild(textEl);
+
+            // Append the messageEl and logEl to chatEl
+            chatEl.appendChild(messageEl);
+            chatEl.appendChild(logEl);
+            
+            // Append the new message to chat container
+            chatContainerEl.appendChild(chatEl);
         }
 
-        document.querySelector('#send-chat').focus();
-        document.querySelector('#send-chat').onkeyup = function(e) {
+        // When enter has been clicked on #chat-input element
+        document.querySelector('#chat-input').focus();
+        document.querySelector('#chat-input').onkeyup = function(e) {
             if (e.keyCode === 13) {  // enter, return
-                submitButton.click();
+                document.querySelector('#send-chat').click();
             }
-        };
+        }
 
         document.querySelector('#send-chat').onclick = (e) => {
             const chatInput = document.querySelector('#chat-input');
-            if (chatInput.value) {
-                // Send message to websocket
-                chatSocket.send(
+            const chatInfo = document.querySelector('#info');
+            if (!chatInput.value) {
+                // Show the chat info when chat input is empty
+                chatInfo.className = chatInfo.className.replace('hide', 'show');
+                return
+            }
+            // Send message to websocket
+            chatSocket.send(
                     JSON.stringify(
                         {
                             message: chatInput.value
                         }
                     )
-                );
-            }
-            
+            );
+            // Make the chat input empty and hide the chat info
             chatInput.value = '';
+            chatInfo.className = chatInfo.className.replace('show', 'hide');
         }
     </script>
 {% endblock content %}

@@ -44,6 +44,8 @@ class ChatKeyModel(models.Model):
     @classmethod
     def get_by_usernames(cls, usernames):
         chatkeys = cls.objects.all()
+        usernames.sort()
         for chatkey in chatkeys:
-            if chatkey.usernames.sort() == usernames.sort():
+            chatkey.usernames.sort()
+            if chatkey.usernames == usernames:
                 return chatkey

@@ -24,20 +24,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         # Setup user1 and user2 username, and 
         # user1 sender and user2 receiver model
-        self.user1_username = await database_sync_to_async(user1.get_username)()
-        self.user2_username = await database_sync_to_async(user2.get_username)()
+        self.user1_username = user1.get_username()
+        self.user2_username = user2.get_username()
         self.user1_sender = await self.get_sendermodel(user=user1)
-        self.user2_receiver = await self.get_sendermodel(user=user2)
+        self.user2_receiver = await self.get_receivermodel(user=user2)
 
         # Get the key from ChatKeyModel and create room name
+        usernames = [self.user1_username]
+        if not self.user1_username == self.user2_username:
+            # We only add the user2 username to `usernames` list when 
+            # it is not the same with user1 username because we don't 
+            # want to duplicate it
+            usernames.append(self.user2_username)
         chatkey = await database_sync_to_async(ChatKeyModel.get_by_usernames)(
-            [
-                self.user1_username,
-                self.user2_username
-            ]
+            usernames
         )
-        key = await self.get_key_from_chatkeymodel(chatkey)
-        self.room_name = f'chat_room_{key}'
+        self.room_name = f'chat_room_{chatkey.key}'
         
         # Add the room name to channel layer
         await self.channel_layer.group_add(
@@ -60,25 +62,37 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_as_json = json.loads(text_data)
         message = text_data_as_json['message']
 
-        # Save the message to database
-        await self.create_chatmodel(
-            sender=self.user1_sender,
-            receiver=self.user2_receiver,
-            text=message
-        )
+        # Setup message for ChatModel
+        message = {
+            'sender': self.user1_sender,
+            'receiver': self.user2_receiver,
+            'text': message
+        }
 
-        # Send the message to channel layer
+        # Save the message to database
+        await self.create_chatmodel(**message)
+
+        # Get the created ChatModel, format the chat log,
+        # then send it to the channel layer
+        chatmodel = await self.get_latest_chatmodel(**message)
+        log = f'{chatmodel.log.date()} - {str(chatmodel.log.time())[:8]}'
+        chatmodel = {
+            'sender_username': self.user1_username,
+            'receiver_username': self.user2_username,
+            'text': chatmodel.text,
+            'log': log
+        }
         await self.channel_layer.group_send(
             self.room_name,
             {
                 'type': 'send.message',
-                'message': message
+                'chatmodel': chatmodel
             }
         )
     
     async def send_message(self, event):
-        # Get the message from event then make it as json format
-        message = json.dumps({'message': event['message']})
+        # Get the chatmodel from event then make it as json format
+        message = json.dumps({'chatmodel': event['chatmodel']})
 
         # Send the message to websocket
         await self.send(
@@ -98,8 +112,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return SenderModel.objects.get(**kwargs)
     
     @database_sync_to_async
-    def get_key_from_chatkeymodel(self, chatkey):
-        return chatkey.key
+    def get_latest_chatmodel(self, **kwargs):
+        return ChatModel.objects.filter(**kwargs).last()
     
     @database_sync_to_async
     def create_chatmodel(self, **kwargs):
