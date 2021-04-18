@@ -56,7 +56,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_name,
             self.channel_name
         )
-    
+        
     async def receive(self, text_data):
         # Decode the message
         text_data_as_json = json.loads(text_data)

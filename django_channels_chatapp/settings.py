@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,13 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '7@cpid+s5udp2b@cb_xpc5#v^%xec0oersogjm33)qm6s!=0n$'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '7@cpid+s5udp2b@cb_xpc5#v^%xec0oersogjm33)qm6s!=0n$')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ['DJANGO_DEBUG'] == 'True'
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -132,11 +132,14 @@ LOGOUT_REDIRECT_URL = 'user:login'
 ASGI_APPLICATION = 'django_channels_chatapp.asgi.application'
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [
-                ('localhost', 6379)
-            ]
-        }
+        # Redis config (for prod)
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     'hosts': [
+        #         ('localhost', 6379)
+        #     ]
+        # }
+        # InMemoryChannelLayer config (for dev)
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }
 }

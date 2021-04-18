@@ -61,7 +61,6 @@
         chatSocket.onmessage = (e) => {
             // Get and decode the message
             const message = JSON.parse(e.data)['chatmodel'];
-            console.log(message);
 
             // Get the chat container and create chat div element for
             // the message
